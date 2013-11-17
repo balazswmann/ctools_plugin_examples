@@ -1,0 +1,21 @@
+/**
+ * @file
+ * General styles for Summary layout.
+ */
+
+.panel-summary > .region.summary {
+  width: 100%;
+}
+.panel-summary > .content-wrapper > .clearer {
+  clear: both;
+  width: 100%;
+}
+.panel-summary > .content-wrapper > .region {
+  float: left;
+}
+.panel-summary > .content-wrapper > .region.content {
+  width: 66%;
+}
+.panel-summary > .content-wrapper > .region.right-sidebar {
+  width: 34%;
+}

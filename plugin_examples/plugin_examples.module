@@ -1,0 +1,18 @@
+<?php
+
+/**
+ * @file
+ * The primary module file of Plugin examples.
+ */
+
+/**
+* Implements hook_ctools_plugin_directory().
+*/
+function plugin_examples_ctools_plugin_directory($owner, $plugin_type) {
+  $plugin_types = array('content_types', 'access', 'styles', 'layouts', 'operation');
+
+  if (($owner == 'ctools' || $owner == 'panels' || $owner == 'one_click')
+    && in_array($plugin_type, $plugin_types)) {
+    return $owner . '_' . $plugin_type;
+  }
+}

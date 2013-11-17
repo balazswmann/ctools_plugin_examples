@@ -1,0 +1,147 @@
+<?php
+
+/**
+ * @file
+ * The primary module file of One click.
+ */
+
+/**
+ * Implements hook_block_info().
+ */
+function one_click_block_info() {
+  $blocks = array();
+  $blocks['one_click'] = array(
+    'info' => 'One click',
+    'cache' => DRUPAL_NO_CACHE,
+  );
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function one_click_block_view($delta = '') {
+  $block = array();
+  switch ($delta) {
+    case 'one_click':
+      $block['subject'] = 'One click';
+      $block['content'] = drupal_get_form('one_click_select_operation_form');
+      break;
+  }
+  return $block;
+}
+
+/**
+ * Select operation form.
+ */
+function one_click_select_operation_form($form, &$form_state) {
+  ctools_include('plugins');
+  // Load operation plugins.
+  $operations = ctools_get_plugins('one_click', 'operation');
+
+  // Construct options array for available operations.
+  $operations_options = array();
+  foreach ($operations as $id => $operation) {
+    $operations_options[$id] = $operation['title'];
+  }
+
+  if (empty($operations_options)) {
+    $form['one_click'] = array(
+      '#markup' => t('There are no available operations.'),
+    );
+  }
+  else {
+    $form['one_click'] = array(
+      'operations' => array(
+        '#type' => 'radios',
+        '#options' => $operations_options,
+        '#default_value' => 'goto',
+      ),
+      'value' => array(
+        '#type' => 'textfield',
+        '#size' => 25,
+      ),
+      'submit' => array(
+        '#type' => 'container',
+        '#attributes' => array(
+          'class' => array('submit')
+        ),
+        'submit' => array(
+          '#type' => 'submit',
+          '#value' => 'Execute',
+        ),
+      ),
+    );
+  }
+
+  return $form;
+}
+
+/**
+ * Validate callback for select operation form.
+ */
+function one_click_select_operation_form_validate($form, &$form_state) {
+  if (!empty($form_state['values']['value'])) {
+    // Load selected operation plugin.
+    $plugin = ctools_get_plugins('one_click', 'operation', $form_state['values']['operations']);
+
+    // Check for "execute" property.
+    if (!isset($plugin['execute'])) {
+      form_set_error('plugin-error', 'The "execute" property of ' . $plugin['title'] . ' plugin is missing');
+    }
+
+    // Check for "validate input" property.
+    if (isset($plugin['validate input'])) {
+      $input_errors = call_user_func($plugin['validate input'], $form_state['values']['value']);
+      if(!empty($input_errors)) {
+        foreach ($input_errors as $error) {
+          form_set_error('value', $error);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Submit callback for select operation form.
+ */
+function one_click_select_operation_form_submit($form, &$form_state) {
+  if (!empty($form_state['values']['value'])) {
+    // Load selected operation plugin.
+    $plugin = ctools_get_plugins('one_click', 'operation', $form_state['values']['operations']);
+
+    // Execute pugin's operation.
+    call_user_func($plugin['execute'], $form_state['values']['value']);
+
+    // Cehck for "success message" property.
+    if (isset($plugin['success message'])) {
+      $message = call_user_func($plugin['success message'], $form_state['values']['value']);
+      drupal_set_message($message);
+    }
+  }
+}
+
+/**
+ * Implements hook_ctools_plugin_type().
+ */
+function one_click_ctools_plugin_type() {
+  return array(
+    'operation' => array(
+      // We don\'t allow hook_MODULE_PLUGIN() functions, so
+      // only hook_ctools_plugin_directory() functions
+      // available for modules to define "operation" plugins.
+      'use hooks' => FALSE,
+    ),
+  );
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function one_click_ctools_plugin_directory($owner, $plugin_type) {
+  // We define our own operation plugins under
+  // "<module path>/plugins" directory.
+  if ($owner == 'one_click' && $plugin_type == 'operation') {
+    return 'plugins';
+  }
+}

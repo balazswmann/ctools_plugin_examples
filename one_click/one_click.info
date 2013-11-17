@@ -1,0 +1,4 @@
+name = One click
+description = Provides useful operations available in one click.
+package = Other
+core = 7.x

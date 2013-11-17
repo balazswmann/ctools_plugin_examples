@@ -1,0 +1,4 @@
+name = Plugin examples for CTools, Panels and One click modules
+description = Shows how an external module can provide plugins for CTools, Panels and One click.
+package = Plugin examples
+core = 7.x
